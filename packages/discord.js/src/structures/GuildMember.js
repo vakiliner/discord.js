@@ -407,6 +407,28 @@ class GuildMember extends Base {
   }
 
   /**
+   * Description
+   * 
+   * @param {boolean} [checkAdmin=true] Whether having the {@link PermissionFlagsBits.Administrator} permission
+   * will return all permissions
+   * @param {boolean} [checkTimeout=checkAdmin] 
+   * @returns {Readonly<PermissionsBitField>}
+   */
+  getPermissions(checkAdmin = true, checkTimeout = checkAdmin) {
+    if (checkAdmin && this.user.id === this.guild.ownerId) {
+      return new PermissionsBitField(PermissionsBitField.All).freeze();
+    }
+    const permissions = this.permissions
+    if (checkAdmin && permissions.has(PermissionFlagsBits.Administrator)) {
+      return new PermissionsBitField(PermissionsBitField.All).freeze();
+    }
+    if (checkTimeout && !permissions.has(PermissionFlagsBits.Administrator) && this.isCommunicationDisabled()) {
+      return new PermissionsBitField(permissions.bitfield & (PermissionFlagsBits.ViewChannel | PermissionFlagsBits.ReadMessageHistory)).freeze();
+    }
+    return permissions;
+  }
+
+  /**
    * Returns `channel.permissionsFor(guildMember)`. Returns permissions for a member in a guild channel,
    * taking into account roles and permission overwrites.
    *
